@@ -41,9 +41,8 @@ while (player_score < 5) && (computer_score < 5)
   loop do
     prompt("Choose one: #{VALID_CHOICES.join(', ')}")
     choice = gets.chomp.downcase
-    if VALID_CHOICES.include?(choice)
-      break
-    elsif abbreviation.key?(choice.to_sym)
+    break if VALID_CHOICES.include?(choice)
+    if abbreviation.key?(choice.to_sym)
       choice = abbreviation[choice.to_sym]
       break
     elsif choice == 's'
@@ -53,6 +52,7 @@ while (player_score < 5) && (computer_score < 5)
     end
   end
 
+  puts `clear`
   computer_choice = VALID_CHOICES.sample
 
   prompt "You chose: #{choice}; Computer chose: #{computer_choice}"
@@ -66,9 +66,6 @@ while (player_score < 5) && (computer_score < 5)
   end
 
   prompt("Current score- Player: #{player_score}; Computer: #{computer_score}")
-  # prompt("Do you want to play again?")
-  # answer = gets.chomp.downcase
-  # break unless answer.start_with?('y')
 end
 
 puts '-------------------------------------'
