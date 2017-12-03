@@ -60,6 +60,9 @@ def display_board(board)
   system 'clear'
   puts "You are '#{PLAYER_MARKER}' | Computer is '#{COMPUTER_MARKER}'"
   puts ""
+  puts "    1|2|3"
+  puts "    4|5|6"
+  puts "    7|8|9"
   puts ""
   puts "         |     |"
   puts "      #{board[1]}  |  #{board[2]}  |  #{board[3]}"
