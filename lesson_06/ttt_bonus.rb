@@ -8,8 +8,8 @@ INITIAL_MARKER = ' '
 PLAYER_MARKER = 'x'
 COMPUTER_MARKER = 'o'
 
-def welcome
-  system 'clear'
+def display_welcome_message
+  system('clear') || system('cls')
   puts "   Welcome to Tic Tac Toe!"
   puts ""
 end
@@ -38,10 +38,7 @@ def valid_player?(choice)
 end
 
 def initialize_scores
-  player_score = 0
-  computer_score = 0
-  cat_score = 0
-  [player_score, computer_score, cat_score]
+  { player: 0, computer: 0, cat: 0 }
 end
 
 def initialize_board
@@ -57,7 +54,7 @@ end
 
 # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
 def display_board(board)
-  system 'clear'
+  system('clear') || system('cls')
   puts "You are '#{PLAYER_MARKER}' | Computer is '#{COMPUTER_MARKER}'"
   puts ""
   puts "    1|2|3"
@@ -83,19 +80,19 @@ def display_scores(scores)
   puts ""
   display_winner(scores)
   puts "  ====================="
-  puts "  |     Your Score: #{scores[0]} |"
-  puts "  | Computer Score: #{scores[1]} |"
-  puts "  |      Cat Score: #{scores[2]} |"
+  puts "  |     Your Score: #{scores[:player]} |"
+  puts "  | Computer Score: #{scores[:computer]} |"
+  puts "  |      Cat Score: #{scores[:cat]} |"
   puts "  ====================="
   puts ""
 end
 
 def display_winner(scores)
-  if scores[0] > 4
+  if scores[:player] > 4
     puts "  You won!! Congrats!"
-  elsif scores[1] > 4
+  elsif scores[:computer] > 4
     puts "  Computer wins! Womp."
-  elsif scores[2] > 4
+  elsif scores[:cat] > 4
     puts "  MEOW! Lawlz"
   else
     puts "  First to 5 wins!"
@@ -120,7 +117,6 @@ def player_places_piece!(board)
     break if empty_squares(board).include?(square)
     prompt "Sorry, that's not a valid choice."
   end
-
   board[square] = PLAYER_MARKER
 end
 
@@ -185,54 +181,79 @@ def board_full?(board)
   empty_squares(board).empty?
 end
 
-def score_increase!(board, scores)
+def display_round_results!(board, scores)
+  update_scores!(board, scores)
+  display_game(board, scores)
+  display_round_winner(board, scores)
+end
+
+def update_scores!(board, scores)
   case detect_winner(board)
-  when 'Player'
-    scores[0] += 1
-    display_game(board, scores)
-    puts 'You won that round!' unless scores[0] > 4
-  when 'Computer'
-    scores[1] += 1
-    display_game(board, scores)
-    puts 'Computer won that round!' unless scores[1] > 4
-  else
-    scores[2] += 1
-    display_game(board, scores)
-    puts 'The cat won that round!' unless scores[2] > 4
+  when 'Player'   then scores[:player] += 1
+  when 'Computer' then scores[:computer] += 1
+  else                 scores[:cat] += 1
   end
 end
 
-def next_round
+def display_round_winner(board, scores)
+  case detect_winner(board)
+  when 'Player'
+    puts 'You won that round!' unless scores[:player] > 4
+  when 'Computer'
+    puts 'Computer won that round!' unless scores[:computer] > 4
+  else
+    puts 'The cat won that round!' unless scores[:cat] > 4
+  end
+end
+
+def move_to_next_round
   puts ""
   prompt "Hit 'enter' for next round."
   gets
 end
 
-def goodbye
+def play_again?
   puts ""
   puts ""
-  prompt "Thanks for playing! Good bye!"
+  answer = ''
+  loop do
+    prompt "Want to play again? Press 'y' or 'n'."
+    answer = gets.chomp.downcase
+    break if answer.start_with?('y', 'n')
+    prompt "Invalid choice."
+  end
+  answer == 'y'
 end
 
-welcome
+def display_goodbye_message
+  puts ""
+  puts ""
+  prompt "Thanks for playing! Good-bye!"
+end
 
-current_player = determine_first_player
-scores = initialize_scores
+display_welcome_message
 
 loop do
-  board = initialize_board
+  current_player = determine_first_player
+  scores = initialize_scores
 
   loop do
-    display_game(board, scores)
-    place_piece!(board, current_player)
-    current_player = alternate_player(current_player)
-    break if someone_won?(board) || board_full?(board)
+    board = initialize_board
+
+    loop do
+      display_game(board, scores)
+      place_piece!(board, current_player)
+      current_player = alternate_player(current_player)
+      break if someone_won?(board) || board_full?(board)
+    end
+
+    display_round_results!(board, scores)
+    break if scores.values.any? { |score| score > 4 }
+
+    move_to_next_round
   end
 
-  score_increase!(board, scores)
-  break if scores.any? { |score| score > 4 }
-
-  next_round
+  break unless play_again?
 end
 
-goodbye
+display_goodbye_message
