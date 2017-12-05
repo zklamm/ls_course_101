@@ -1,24 +1,17 @@
 CARD_VALUE = {
   '2' => 2, '3' => 3, '4' => 4, '5' => 5,
   '6' => 6, '7' => 7, '8' => 8, '9' => 9,
-  '10' => 10, 'Jack' => 10, 'Queen' => 10,
-  'King' => 10, 'Ace' => 11
+  '10' => 10, 'J' => 10, 'Q' => 10,
+  'K' => 10, 'A' => 11
 }
 
-# 1. Initialize deck
-# 2. Deal cards to player and dealer
-# 3. Player turn: hit or stay
-#   - repeat until bust or "stay"
-# 4. If player bust, dealer wins.
-# 5. Dealer turn: hit or stay
-#   - repeat until total >= 17
-# 6. If dealer bust, player wins.
-# 7. Compare cards and declare winner.
-
-def welcome
-  system 'clear'
+def display_welcome_message
+  system('clear') || system('cls')
   puts ""
   puts "♠ ♥ ♦ ♣ Welcome to 'Twenty-One'! ♠ ♥ ♦ ♣"
+  puts ""
+  puts "'Twenty-One' is like Blackjack, but we "\
+       "won't be doing splits or double down."
   puts ""
   prompt "Press 'enter' to deal the cards!"
   gets
@@ -28,8 +21,12 @@ def prompt(msg)
   puts "=> #{msg}"
 end
 
+def initialize_tally
+  { player: 0, dealer: 0, ties: 0 }
+end
+
 def initialize_deck
-  values = %w[2 3 4 5 6 7 8 9 10 Jack Queen King Ace]
+  values = %w[2 3 4 5 6 7 8 9 10 J Q K A]
   suits = %w[♠ ♥ ♦ ♣]
   values.product(suits)
 end
@@ -46,40 +43,28 @@ def deal_hands!(deck)
   { player: player_hand, dealer: dealer_hand }
 end
 
-def display_hands(hands)
-  system 'clear'
+def display_both_hands(hands, player_has_gone = false)
+  system('clear') || system('cls')
   puts ""
-  first_dealer_hand(hands)
+  player_has_gone ? display_hand(hands, :dealer) : secret_card(hands)
   puts ""
   puts ""
-  display_player_hand(hands)
+  display_hand(hands, :player)
   puts ""
   puts ""
 end
 
-def first_dealer_hand(hands)
+def secret_card(hands)
   print "Dealer has:  "
-  print hands[:dealer][0][0].to_s
+  print "#{hands[:dealer][0][0]}(#{hands[:dealer][0][1]})"
   print " & ??? = ???"
 end
 
-def display_dealer_hand(hands)
-  print "Dealer has:  "
-  dealer_hand = []
-  hands[0].each do |card|
-    dealer_hand << card[0]
-  end
-  puts joinor(dealer_hand, ', ', '&').to_s
-end
-
-def display_player_hand(hands)
-  print "Player has:  "
-  player_hand = []
-  hands[:player].each do |card|
-    player_hand << card[0]
-  end
-  print "#{joinor(player_hand, ', ', '&')} = "
-  puts calculate_player_hand(hands).to_s
+def display_hand(hands, current_player)
+  values = hands[current_player].map { |card| "#{card[0]}(#{card[1]})" }
+  print "#{current_player.capitalize} has:  "
+  print "#{joinor(values, ', ', '&')} = "
+  print calculate_hand(hands, current_player).to_s
 end
 
 def joinor(arr, delimiter=', ', word='or')
@@ -93,97 +78,160 @@ def joinor(arr, delimiter=', ', word='or')
   end
 end
 
-def player_turn!(deck, hands)
-  choice = ''
-  loop do
-    prompt "Enter 'hit' or 'stay'."
-    choice = gets.chomp.downcase
-    break if choice == 'hit' || choice == 'stay'
-    prompt "Invalid choice."
+def calculate_hand(hands, current_player)
+  sum = 0
+  aces = 0
+  hands[current_player].each do |card|
+    sum += CARD_VALUE[card[0]]
+    aces += 1 if card[0] == 'Ace'
   end
-  if choice == 'hit'
-    player_hit!(deck, hands)
-    display_hands(hands)
+  aces.times do
+    sum -= 10 if sum > 21
+  end
+  sum
+end
+
+def player_turn!(deck, hands)
+  if determine_player_choice.start_with?('h')
+    hit!(deck, hands, :player)
+    'hit'
   else
     'stay'
   end
 end
 
-def player_hit!(deck, hands)
-  hands[:player] << deck.sample
-  deck.delete_at(deck.index(hands[:player][-1]))
+def determine_player_choice
+  choice = ''
+  loop do
+    prompt "Hit or stay? Enter 'h' or 's'."
+    choice = gets.chomp.downcase
+    break if choice.start_with?('h', 's')
+    prompt "Invalid choice."
+  end
+  choice
 end
 
-def dealer_hit!(deck, hands)
-  hands[:dealer] << deck.sample
-  deck.delete_at(deck.index(hands[:dealer][-1]))
+def hit!(deck, hands, current_player)
+  hands[current_player] << deck.sample
+  deck.delete_at(deck.index(hands[current_player][-1]))
+end
+
+def bust?(hands, current_player)
+  calculate_hand(hands, current_player) > 21
 end
 
 def player_stay?(choice)
-  choice == 'stay'
+  choice.start_with?('s')
 end
 
-def player_bust?(hands)
-  player_sum = calculate_player_hand(hands)
-  player_sum > 21
-end
-
-def calculate_player_hand(hands)
-  player_sum = 0
-  hands[:player].each do |card|
-    player_sum += CARD_VALUE[card[0]]
+def dealer_turn!(deck, hands)
+  dealer_sum = calculate_hand(hands, :dealer)
+  player_sum = calculate_hand(hands, :player)
+  if dealer_sum < player_sum
+    until dealer_sum >= 17 || dealer_sum > player_sum
+      hit!(deck, hands, :dealer)
+      dealer_sum = calculate_hand(hands, :dealer)
+      player_sum = calculate_hand(hands, :player)
+    end
   end
-  player_sum
 end
 
-def calculate_dealer_hand(hands)
-  dealer_sum = 0
-  hands[:dealer].each do |card|
-    dealer_sum += CARD_VALUE[card[0]]
+def display_winner(hands)
+  puts ""
+  player_sum = calculate_hand(hands, :player)
+  dealer_sum = calculate_hand(hands, :dealer)
+  case player_sum <=> dealer_sum
+  when 1 then puts "You win!"
+  when 0 then puts "It's a push!"
+  else        puts "The dealer wins!"
   end
-  dealer_sum
+  puts ""
+end
+
+def update_tally!(hands, tally)
+  if bust?(hands, :player)
+    tally[:dealer] += 1
+  elsif bust?(hands, :dealer)
+    tally[:player] += 1
+  else
+    compare_hands(hands, tally)
+  end
+end
+
+def compare_hands(hands, tally)
+  player_sum = calculate_hand(hands, :player)
+  dealer_sum = calculate_hand(hands, :dealer)
+  case player_sum <=> dealer_sum
+  when 1  then tally[:player] += 1
+  when -1 then tally[:dealer] += 1
+  else         tally[:ties]   += 1
+  end
+end
+
+def display_tally(tally)
+  puts "Rounds won..."
+  puts "========================"
+  puts "Dealer: #{tally[:dealer]}"
+  puts "Player: #{tally[:player]}"
+  puts "Ties: #{tally[:ties]}"
+  puts "========================"
 end
 
 def play_again?
   answer = ''
   loop do
+    puts ""
     prompt "Play again? Press 'y' or 'n'."
     answer = gets.chomp.downcase
     break if answer.start_with?('y', 'n')
     prompt "Invalid choice."
   end
-  answer == 'y'
+  answer.start_with?('y')
 end
 
-def dealer_turn!(deck, hands)
-  
-end
-
-def goodbye
+def display_goodbye_message
   puts ""
   puts "Thanks for playing Twenty-One! ♠ ♥ ♦ ♣"
   puts ""
 end
 
-welcome
+display_welcome_message
+
+tally = initialize_tally
 
 loop do
   deck = initialize_deck
-  hands = deal_hands!(deck) # [player_hand, dealer_hand]
+  hands = deal_hands!(deck)
 
   loop do
-    display_hands(hands)
+    display_both_hands(hands)
     choice = player_turn!(deck, hands)
-    break if player_bust?(hands) || player_stay?(choice)
+    display_both_hands(hands)
+    break if bust?(hands, :player) || player_stay?(choice)
   end
 
-  if player_bust?(hands)
-    puts "Bust! Too bad!"
+  if bust?(hands, :player)
+    puts "You bust! Too bad!"
   else
     puts "You chose to stay!"
-    dealer_turn!(deck, hands)
+    current_player = :dealer
+    player_has_gone = true
   end
+
+  if current_player == :dealer
+    dealer_turn!(deck, hands)
+    if bust?(hands, :dealer)
+      display_both_hands(hands, player_has_gone)
+      puts "Dealer Busts! You win!"
+    else
+      display_both_hands(hands, player_has_gone)
+      display_winner(hands)
+    end
+  end
+
+  update_tally!(hands, tally)
+  display_tally(tally)
   break unless play_again?
 end
 
-goodbye
+display_goodbye_message
