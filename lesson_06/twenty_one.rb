@@ -83,7 +83,7 @@ def calculate_hand(hands, current_player)
   aces = 0
   hands[current_player].each do |card|
     sum += CARD_VALUE[card[0]]
-    aces += 1 if card[0] == 'Ace'
+    aces += 1 if card[0] == 'A'
   end
   aces.times do
     sum -= 10 if sum > 21
