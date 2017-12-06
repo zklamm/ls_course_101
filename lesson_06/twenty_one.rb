@@ -46,7 +46,7 @@ end
 def display_both_hands(hands, player_has_gone = false)
   system('clear') || system('cls')
   puts ""
-  player_has_gone ? display_hand(hands, :dealer) : secret_card(hands)
+  player_has_gone ? display_hand(hands, :dealer) : display_secret_card(hands)
   puts ""
   puts ""
   display_hand(hands, :player)
@@ -54,7 +54,7 @@ def display_both_hands(hands, player_has_gone = false)
   puts ""
 end
 
-def secret_card(hands)
+def display_secret_card(hands)
   print "Dealer has:  "
   print "#{hands[:dealer][0][0]}(#{hands[:dealer][0][1]})"
   print " & ??? = ???"
@@ -91,21 +91,12 @@ def calculate_hand(hands, current_player)
   sum
 end
 
-def player_turn!(deck, hands)
-  if determine_player_choice.start_with?('h')
-    hit!(deck, hands, :player)
-    'hit'
-  else
-    'stay'
-  end
-end
-
 def determine_player_choice
   choice = ''
   loop do
     prompt "Hit or stay? Enter 'h' or 's'."
     choice = gets.chomp.downcase
-    break if choice.start_with?('h', 's')
+    break if choice == 'h' || choice == 's'
     prompt "Invalid choice."
   end
   choice
@@ -121,7 +112,7 @@ def bust?(hands, current_player)
 end
 
 def player_stay?(choice)
-  choice.start_with?('s')
+  choice == 's'
 end
 
 def dealer_turn!(deck, hands)
@@ -183,10 +174,10 @@ def play_again?
     puts ""
     prompt "Play again? Press 'y' or 'n'."
     answer = gets.chomp.downcase
-    break if answer.start_with?('y', 'n')
+    break if answer == 'y' || answer == 'n'
     prompt "Invalid choice."
   end
-  answer.start_with?('y')
+  answer == 'y'
 end
 
 def display_goodbye_message
@@ -205,7 +196,8 @@ loop do
 
   loop do
     display_both_hands(hands)
-    choice = player_turn!(deck, hands)
+    choice = determine_player_choice
+    hit!(deck, hands, :player) if choice == 'h'
     display_both_hands(hands)
     break if bust?(hands, :player) || player_stay?(choice)
   end
