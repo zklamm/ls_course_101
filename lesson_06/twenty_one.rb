@@ -28,17 +28,15 @@ end
 def initialize_deck
   values = %w[2 3 4 5 6 7 8 9 10 J Q K A]
   suits = %w[♠ ♥ ♦ ♣]
-  values.product(suits)
+  values.product(suits).shuffle
 end
 
 def deal_hands!(deck)
   player_hand = []
   dealer_hand = []
   2.times do
-    player_hand << deck.sample
-    deck.delete_at(deck.index(player_hand[-1]))
-    dealer_hand << deck.sample
-    deck.delete_at(deck.index(dealer_hand[-1]))
+    player_hand << deck.pop
+    dealer_hand << deck.pop
   end
   { player: player_hand, dealer: dealer_hand }
 end
@@ -103,8 +101,7 @@ def determine_player_choice
 end
 
 def hit!(deck, hands, current_player)
-  hands[current_player] << deck.sample
-  deck.delete_at(deck.index(hands[current_player][-1]))
+  hands[current_player] << deck.pop
 end
 
 def bust?(hands, current_player)
