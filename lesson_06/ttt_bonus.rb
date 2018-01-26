@@ -4,9 +4,9 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                 [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # cols
                 [[1, 5, 9], [3, 5, 7]]              # diag
 
-INITIAL_MARKER = ' '
-PLAYER_MARKER = 'x'
-COMPUTER_MARKER = 'o'
+INITIAL_MARKER = '  '
+PLAYER_MARKER = '❌'
+COMPUTER_MARKER = '⭕'
 
 def display_welcome_message
   system('clear') || system('cls')
@@ -61,17 +61,17 @@ def display_board(board)
   puts "    4|5|6"
   puts "    7|8|9"
   puts ""
-  puts "         |     |"
+  puts "          |      |"
   puts "      #{board[1]}  |  #{board[2]}  |  #{board[3]}"
-  puts "         |     |"
-  puts "    -----+-----+-----"
-  puts "         |     |"
+  puts "          |      |"
+  puts "    ------+------+-----"
+  puts "          |      |"
   puts "      #{board[4]}  |  #{board[5]}  |  #{board[6]}"
-  puts "         |     |"
-  puts "    -----+-----+-----"
-  puts "         |     |"
+  puts "          |      |"
+  puts "    ------+------+-----"
+  puts "          |      |"
   puts "      #{board[7]}  |  #{board[8]}  |  #{board[9]}"
-  puts "         |     |"
+  puts "          |      |"
   puts ""
 end
 # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
@@ -79,11 +79,11 @@ end
 def display_scores(scores)
   puts ""
   display_winner(scores)
-  puts "  ====================="
-  puts "  |     Your Score: #{scores[:player]} |"
-  puts "  | Computer Score: #{scores[:computer]} |"
-  puts "  |      Cat Score: #{scores[:cat]} |"
-  puts "  ====================="
+  puts "  ========="
+  puts "  | ❌: #{scores[:player]} |"
+  puts "  | ⭕: #{scores[:computer]} |"
+  puts "  | 😸: #{scores[:cat]} |"
+  puts "  ========="
   puts ""
 end
 
@@ -93,7 +93,7 @@ def display_winner(scores)
   elsif scores[:computer] > 4
     puts "  Computer wins! Womp."
   elsif scores[:cat] > 4
-    puts "  MEOW! Lawlz"
+    puts "  😸😸 Lawlz"
   else
     puts "  First to 5 wins!"
   end

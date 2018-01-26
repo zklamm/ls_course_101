@@ -108,11 +108,11 @@ def bust?(hands, current_player)
   calculate_hand(hands, current_player) > 21
 end
 
-def player_stay?(choice)
+def stay?(choice)
   choice == 's'
 end
 
-def dealer_turn!(deck, hands)
+def dealer_turn(deck, hands)
   dealer_sum = calculate_hand(hands, :dealer)
   player_sum = calculate_hand(hands, :player)
   if dealer_sum < player_sum
@@ -196,7 +196,7 @@ loop do
     choice = determine_player_choice
     hit!(deck, hands, :player) if choice == 'h'
     display_both_hands(hands)
-    break if bust?(hands, :player) || player_stay?(choice)
+    break if bust?(hands, :player) || stay?(choice)
   end
 
   if bust?(hands, :player)
@@ -208,7 +208,7 @@ loop do
   end
 
   if current_player == :dealer
-    dealer_turn!(deck, hands)
+    dealer_turn(deck, hands)
     if bust?(hands, :dealer)
       display_both_hands(hands, player_has_gone)
       puts "Dealer Busts! You win!"
